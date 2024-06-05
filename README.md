@@ -45,7 +45,7 @@ For the admin interface I created an admin user:
 $ python manage.py createsuperuser
 
 user: admin
-email: admin@tutor_site.net
+email: admin@tutorsiteapp.net
 pass: Gr3enM0nkeyL4tte%_
 ```
 
