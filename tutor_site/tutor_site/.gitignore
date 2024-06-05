@@ -1,0 +1,2 @@
+# ignore local_settings python files in this directory which might contain secrets.
+/local_settings*.py

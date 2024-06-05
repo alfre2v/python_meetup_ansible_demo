@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "polls.apps.PollsConfig",  # ALF: main django app
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -54,7 +56,7 @@ ROOT_URLCONF = "tutor_site.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -70,15 +72,71 @@ TEMPLATES = [
 WSGI_APPLICATION = "tutor_site.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+# Logging configuration. See: https://docs.djangoproject.com/en/dev/topics/logging/#configuring-logging
+
+LOG_LEVEL = "DEBUG"
+LOG_LEVEL_DJANGO = "INFO"
+
+# LOG_FILENAME = "/var/log/gunicorn/tutor_site_django.log"
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "app",
+        },
+        # "logfile": {
+        #     "class": "logging.handlers.WatchedFileHandler",
+        #     "filename": LOG_FILENAME,
+        #     "level": logging.DEBUG,
+        #     "formatter": "app",
+        # },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", LOG_LEVEL_DJANGO),
+            "propagate": False,
+        },
+    },
+    "formatters": {
+        "app": {
+            # "format": "%(asctime)s [%(levelname)-8s] (%(module)s.%(funcName)s) %(message)s",
+            "format": "%(asctime)s - %(levelname)s - %(name)s - %(filename)s - %(lineno)d - %(funcName)s - %(message)s",
+            # "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+}
+
+
+# Database. See: https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        # overridden in local_settings.py
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": "localhost",
+        "PORT": "5432",
+        "NAME": "--overridden--",
+        "USER": "--overridden--",
+        "PASSWORD": "--overridden--",
+        "CONN_MAX_AGE": 0,
     }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 
 # Password validation
@@ -110,8 +168,82 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / 'static']
+# STATIC_ROOT = '/var/www/{project_name_or_domain_etc}/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+INTERNAL_IPS = [
+    # third-party package: django-debug-toolbar
+    # see: https://django-debug-toolbar.readthedocs.io/en/latest/installation.html
+    "127.0.0.1",
+]
+
+# ------------------------------------------
+# Security hardening after HTTPS configured
+# ------------------------------------------
+
+# Security hardening after HTTPS configured - protect session cookies
+# According to https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/#https
+# Add the following settings for extra security after HTTPS is configured:
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+
+# Security hardening after HTTPS configured - HSTS header (HTTP Strict Transport Security)
+# According to https://realpython.com/django-nginx-gunicorn/#taking-it-one-step-further-with-hsts
+# Add the following settings for extra security after HTTPS is configured:
+# SECURE_HSTS_SECONDS = 2592000  # 2592000 == 30 days. But test first with a small value, e.g. 3
+# SECURE_HSTS_PRELOAD = True
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# see: https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-SECURE_PROXY_SSL_HEADER
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+#  Referrer-Policy header. See: https://realpython.com/django-nginx-gunicorn/#setting-the-referrer-policy-header
+# SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+
+# ----------------------------------------------------------------------------------------
+# Setting Django Headers for security after SSL configured:
+# https://github.com/benyaminsalimi/Secure-Headers/blob/master/example/Django_Settings.py
+# change some Django default secure header
+# more info : https://docs.djangoproject.com/en/2.1/topics/security/
+# for configuring other headers (maybe some of these read Django Doc) using your webserver is better
+# ----------------------------------------------------------------------------------------
+
+# # X-XSS-Protection
+# SECURE_BROWSER_XSS_FILTER = True
+# # X-Frame-Options
+# X_FRAME_OPTIONS = 'DENY'
+# # X-Content-Type-Options
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# ## Strict-Transport-Security
+# # SECURE_HSTS_SECONDS = 15768000
+# # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# # SECURE_HSTS_PRELOAD = True
+
+# that requests over HTTP are redirected to HTTPS. also can config in webserver
+# SECURE_SSL_REDIRECT = True
+
+# # for more security
+# CSRF_COOKIE_SECURE = True
+# CSRF_USE_SESSIONS = True
+# CSRF_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_SECURE = True
+# SESSION_COOKIE_SAMESITE = 'Strict'
+
+
+# -----------------------------------------------
+# Import local_settings (keep secrets out of git)
+# -----------------------------------------------
+
+# Keep Django settings for different deployment environments separated
+# see: https://zappycode.com/tutorials/keep-secrets-secret-how-to-hide-sensitive-data-in-django
+try:
+    from .local_settings import *
+except ImportError:
+    print('Error importing local_settings file!')
+    raise

@@ -25,4 +25,4 @@ psycopg[c]
 # django-debug-toolbar==4.3.0
 
 # read environment variables from .env file. See: https://github.com/theskumar/python-dotenv
-# python-dotenv==1.0.1
+python-dotenv>=1.0.1
