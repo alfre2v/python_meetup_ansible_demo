@@ -1,0 +1,28 @@
+Django>=5.0.6
+pytz>=2024.1
+gunicorn>=22.0.0
+
+# Psycopg - Binary installation: psycopg[binary]
+# psycopg3 installation: https://www.psycopg.org/psycopg3/docs/basic/install.html
+# 1. install dependencies: $ sudo apt install python3-dev libpq-dev build-essential postgresql-client
+# 2. you can install the binary version (fast): `pip install "psycopg[binary]"`,
+# or you can install the pure python (slow): `pip install psycopg`.
+psycopg[binary]
+
+# Psycopg - Local installation - Preferred installation for production sites: psycopg[c]
+# See: https://www.psycopg.org/psycopg3/docs/basic/install.html#local-installation
+# The library will include the speed-up C module and will be linked to the system libraries (libpq, libssl…).
+# For a local installation you need some prerequisites:
+#   - a C compiler,
+#   - Python development headers (e.g. the `python3-dev` package).
+#   - PostgreSQL client development headers (e.g. the `libpq-dev` package).
+#   - The `pg_config` program available in the PATH.
+# To install prerequisites: $ sudo apt install python3-dev libpq-dev build-essential postgresql-client
+# If your build prerequisites are in place you can run: $ pip install "psycopg[c]"
+psycopg[c]
+
+# Third-party package for Django. Requires additional steps in settings. See: https://django-debug-toolbar.readthedocs.io/en/latest/installation.html
+# django-debug-toolbar==4.3.0
+
+# read environment variables from .env file. See: https://github.com/theskumar/python-dotenv
+# python-dotenv==1.0.1
