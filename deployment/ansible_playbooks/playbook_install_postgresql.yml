@@ -1,0 +1,95 @@
+---
+# This playbook depends on postgresql community ansible modules: `community.postgresql.postgresql_user` and `community.postgresql.postgresql_set`
+# To install ansible modules: ansible-galaxy collection install community.postgresql
+# These modules require packages: python3-psycopg2, libpq-dev. This is haddled by a pre-task below.
+
+- name: Install and configure PostgreSQL on my db server
+  hosts: db
+  become: yes
+
+  handlers:
+    - name: restart postgresql
+      ansible.builtin.service: name=postgresql state=restarted
+
+  pre_tasks:
+    # load secret vars from either gitignored vars_secret.yml or encrypted vars_vault.yml
+    - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
+
+    - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
+
+    - name: 'install apt packages that must be installed in all machines (var: apt_install_packages)'
+      ansible.builtin.apt:
+        name: "{{ apt_install_packages }}"
+        state: present
+      when: (apt_install_packages is defined) and (apt_install_packages | length > 0)
+
+    - name: install required pkgs for ansible postgresql modules
+      ansible.builtin.apt:
+        name:
+          - python3-psycopg2
+          - libpq-dev
+        state: present
+
+  tasks:
+    # task1: install postgres database server
+    - name: install postgresql-{{ postgresql_version }}, postgresql-contrib-{{ postgresql_version }}
+      ansible.builtin.apt:
+        name:
+          - postgresql-{{ postgresql_version }}
+          - postgresql-contrib-{{ postgresql_version }}
+          - postgresql-client-{{ postgresql_version }}
+        state: present
+      register: apt_result
+      notify:
+        - restart postgresql
+
+    # task2: postgresql.service enabled and running
+    - name: postgresql.service enabled and running
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: yes
+      notify:
+        - restart postgresql
+
+    # task4: change password for PostgreSQL user `postgres`
+    # activate pipelining to solve error: "Failed to set permissions on the temporary files Ansible needs to create when becoming an unprivileged user".
+    # ... see: https://docs.ansible.com/ansible-core/2.15/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user
+    # In Ubuntu, postgresql_user module requires the remote host to have apt pkgs installed: postgresql, libpq-dev, and python3-psycopg2.
+    - name: change password for PostgreSQL user `postgres`
+      become: yes
+      become_method: sudo
+      become_user: "{{ postgres_user }}"
+      community.postgresql.postgresql_user:
+        db: template1
+        name: "{{ postgres_admin_user }}"
+        password: "{{ postgres_admin_pass }}"
+        expires: infinity
+        state: present
+
+    # task5: add listen_addresses='0.0.0.0' to file /etc/postgresql/*/main/postgresql.conf to
+    - name: edit file /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf to listen on all IPv4 addresses
+      ansible.builtin.lineinfile:
+        path: "/etc/postgresql/{{ postgresql_version }}/main/postgresql.conf"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        insertbefore: "{{ item.insertbefore }}"
+        state: present
+      with_items: "{{ postgresql_conf_lines }}"
+      notify:
+        - restart postgresql
+
+    # task6: Configure host based authentication entries to be set in the pg_hba.conf
+    # see: https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
+    - name: edit file /etc/postgresql/*/main/pg_hba.conf to allow IPv4 connections
+      become_user: "{{ postgres_user }}"
+      community.postgresql.postgresql_pg_hba:
+        dest: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+        contype: "{{ item.type }}"
+        databases: "{{ item.database }}"
+        users: "{{ item.user }}"
+        source: "{{ item.address }}"
+        method: "{{ item.auth_method }}"
+      with_items: "{{ pg_hba_conf_lines }}"
+      notify:
+        - restart postgresql

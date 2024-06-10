@@ -1,0 +1,59 @@
+---
+
+- name: Debug anything that I want at the moment
+  hosts: app
+  become: yes
+
+  pre_tasks:
+
+    # load secret vars from either gitignored vars_secret.yml or encrypted vars_vault.yml
+    # - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
+    # - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
+
+  tasks:
+    - ansible.builtin.debug:
+        var: playbook_status_dir
+
+    # - debug:
+    #     var: deployed_code_version_result
+
+
+    # - name: Pause play until a URL is reachable from ansible host
+    #   become: no
+    #   ansible.builtin.uri:
+    #     url: "https://{{ item.domain }}/polls_gen/"
+    #     # follow_redirects: none
+    #     method: GET
+    #     validate_certs: false
+    #     return_content: true
+    #   register: _result
+    #   until: "item.body_substr in _result.content"
+    #   retries: 5 # 5 * 6 seconds = 1/2 minute
+    #   delay: 6 # Every 5 seconds
+    #   run_once: True
+    #   delegate_to: 127.0.0.1
+    #   with_items: "{{ urls_to_check }}"
+    #   vars:
+    #     urls_to_check:
+    #       - { domain: orc-app1.test,  body_substr: 'Open polls'}
+    #       - { domain: orc-app2.test,  body_substr: 'Open polls'}
+
+
+    # - debug:
+    #     # var: remote_app_code_dir
+    #     var: current_dir
+    #   vars:
+    #     parent_dir: "{{ (remote_app_code_dir + '/..') | realpath }}"
+    #     current_dir: "{{ '.' | realpath }}"
+
+
+    # - debug:
+    #     msg: "{{ inventory_dir | basename }}"
+    #   # "msg": "vagrant_ubuntu20.04"
+
+
+    # - debug:
+    #     var: db_host
+    #   run_once: true
+    #   vars:
+    #     db_host: "{{ hostvars[groups['db'][0]].ansible_host }}"

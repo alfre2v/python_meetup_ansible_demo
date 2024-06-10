@@ -1,0 +1,60 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  # General Vagrant VM configuration
+
+  if Vagrant::Util::Platform.darwin?
+    # is macos: use ARM vm box
+    config.vm.box = "starboard/ubuntu-arm64-20.04.5"
+    config.vm.box_version = "20221120.20.40.0"
+  else
+    # is linux or other OS: use AMD64 vm box
+    config.vm.box = "geerlingguy/ubuntu2004"
+  end
+
+  config.ssh.insert_key = false    # important for ansible to connect via ssh
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.box_download_insecure = true
+
+
+  # Provider specific configurations will be applied appropriately
+
+  # virtualbox is our provider in Linux
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 512
+    v.linked_clone = true
+  end
+  # vmware is our provider in Macos
+  config.vm.provider "vmware_desktop" do |v|
+    v.vmx["memsize"] = "512"
+    # v.vmx["numvcpus"] = "2"
+    v.ssh_info_public = true  # hack for Apple Silicon
+    v.linked_clone = false    # hack for Apple Silicon
+    v.vmx["ethernet0.virtualdev"] = "vmxnet3"  # See: https://gist.github.com/sbailliez/2305d831ebcf56094fd432a8717bed93
+  end
+
+  # Application specific configuration - Servers definition
+
+  # Application server 1
+  config.vm.define "app1" do |app|
+    app.vm.hostname = "orc-app1.test"
+    app.vm.network :private_network, ip: "192.168.56.4"
+  end
+
+#   # Application server 2  --> Commented out for this demo
+#   config.vm.define "app2" do |app|
+#     app.vm.hostname = "orc-app2.test"
+#     app.vm.network :private_network, ip: "192.168.56.5"
+#   end
+
+  # Database server
+  config.vm.define "db" do |db|
+    db.vm.hostname = "orc-db.test"
+    db.vm.network :private_network, ip: "192.168.56.6"
+  end
+
+end

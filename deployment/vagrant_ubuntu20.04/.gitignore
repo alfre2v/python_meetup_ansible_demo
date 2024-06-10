@@ -1,0 +1,2 @@
+# very important, you don't want to push the virtual machine files to github
+.vagrant/

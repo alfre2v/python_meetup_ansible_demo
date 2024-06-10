@@ -1,0 +1,52 @@
+---
+
+# This playbook adds vagrant virtual machines IPs to localhost /etc/hosts for testing purposes.
+# Only for local testing!!!
+
+# To execute this playbook:
+#   ansible-playbook playbook_localhost_testIPs_in_etc_hosts.yml --ask-become-pass
+
+# The source of truth for what IPs are used for the vagrant test virtual machines
+# is the file ../vagrant_ubuntu20.04/Vagrantfile
+# Please refer to Vagrantfile to validate the IP values provided here below are correct.
+
+- name: Add IPs from test servers in vagrant network to localhost /etc/hosts file
+  hosts: 127.0.0.1
+  connection: local  # this should not be used together with `delegate_to: 127.0.0.1`
+
+  vars:
+    # why these vars? see: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#local-playbooks
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    ansible_user: alfredo
+
+    proceed_word: PROCEED
+
+  vars_prompt:
+    # interactive input. See: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html
+    - name: confirm_proceed
+      prompt: |
+        Executing this playbook will change the /etc/hosts file ON YOUR LOCAL MACHINE (NOT ON A REMOTE SERVER)!!
+        To proceed type: {{ proceed_word }}
+      private: false
+
+  tasks:
+
+    - debug:
+        var: confirm_proceed
+
+    - fail:
+        msg: "Aborting playbook: user did not confirm action by typing '{{ proceed_word }}'"
+      when: confirm_proceed != proceed_word
+
+    - name: Add vagrant test servers IPs to localhost /etc/hosts
+      ansible.builtin.blockinfile:
+        path: "/etc/hosts"
+        block: |
+          # vagrant virtual machines for python_meetup_ansible_demo
+          192.168.56.4 orc-app1.test www.orc-app1.test demoapp.orc-app1.test
+          192.168.56.6 orc-db.test
+        create: false
+        backup: true
+      become: yes
+      become_method: sudo
+      run_once: yes

@@ -1,0 +1,3 @@
+vars*_secret.yaml
+vars*_secret.yml
+_vault_password_hint.txt

@@ -5,13 +5,13 @@ Demo code for "An Evening of Python Coding" event hosted by the Austin Python Me
 This demo code consist of two parts each contained in a folder:
 
 1. `tutor_site`: Contains a simple Django Application resulting of following the Django tutorial.
-2. `deployment`: Contains ansible files needed to deploy the application as well as Vagrant files 
+2. `deployment`: Contains ansible files needed to deploy the application as well as Vagrant files.
 
 --------------------------------------------------------------------
 
 ## The application tutor_site
 
-This is a demo Django application creating from following Django official tutorial.
+This is a demo Django application created from following Django official tutorial.
 
 This application should be as simple as possible while still introducing beginners to the most basic Django concepts.
 
@@ -57,4 +57,60 @@ This folder contains everything related to our Ansible deployment logic. This is
 
 For simplicity, in small projects it's ok to keep our ansible files in the same git repository than our application.
 However, for real projects I would recommend having a separate repository for the deployment.
+
+The deployment folder contains 2 folders:
+
+1. `ansible_playbooks` - Ansible deployment files
+2. `vagrant_ubuntu20.04` - Vagrant configuration to locally run a Virtualized Deployment environment for testing deployments.
+
+
+### Using Vagrant 
+
+Vagrant is a tool that allows you to quickly provision, run and destroy Virtual Machines in your local machine 
+to aid in testing your deployment strategies for distributed applications.
+
+In addition to Vagrant itself, you will need a virtualization solution that Vagrant can recognize, 
+like VirtualBox, VMWare Fusion, or Docker (not full virtualization, but reported as useful for Apple Silicon).
+
+#### Installing Vagrant and VirtualBox on Linux
+
+```bash
+# For Debian based systems 
+apt install virtualbox
+apt install vagrant
+```
+
+#### Installing Vagrant and VMWare Player on Apple Silicon (M1 and up)
+
+Steps:
+
+1. Install VMWare Fusion (and register to get a free license).
+2. Install Vagrant (homebrew recommended).
+3. Install Vagrant VMWare provider (homebrew recommended).
+
+Follow the steps as detailed in the following gist: 
+[Vagrant and VMWare Fusion 13 on Apple M1 Pro](https://gist.github.com/sbailliez/2305d831ebcf56094fd432a8717bed93)
+
+**Note**: For me, the Rosetta installation step threw an error (I already had it installed), but that did not seem to matter.
+
+**To Learn more about Vagrant**:
+
+- Beginner's friendly intro to Vagrant in a presentation style: https://where.matsinet.codes/presentations/getting-started-with-vagrant/
+- Example Vagrantfiles for different situations: https://www.thisprogrammingthing.com/2015/multiple-vagrant-vms-in-one-vagrantfile/
+- Chapter of a Vagrant book that covers networking configuration in vagrant: https://www.oreilly.com/library/view/vagrant-up-and/9781449336103/ch04.html
+
+#### Vagrant Basic Operations
+
+For this demo we will only use the following vagrant commands:
+
+- `vagrant up`: starts and provisions the vagrant environment
+- `vagrant reload`: restarts vagrant machine, loads new Vagrantfile configuration
+- `vagrant halt`: stops the vagrant machine
+- `vagrant destroy`: stops and deletes all traces of the vagrant machine
+- `vagrant ssh`: connects to machine via SSH
+
+All these commands accept an optional last argument `[name|id]` to specify on which vm the operation will be conducted.
+For example, to connect via ssh to db vm: `vagrant ssh db`
+
+Run `vagrant --help` to see all available commands.
 

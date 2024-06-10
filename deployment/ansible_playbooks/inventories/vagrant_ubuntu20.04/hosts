@@ -1,0 +1,22 @@
+# hosts
+# inventory_hostname            ip_to_ssh_into
+orc-app1                        ansible_host=192.168.56.4
+orc-db                          ansible_host=192.168.56.6
+
+# Application servers
+[app]
+orc-app1
+
+# Database servers
+[db]
+orc-db
+
+# Group 'multi' with all servers
+[multi:children]
+app
+db
+
+# Variables that will be applied to all servers
+[multi:vars]
+ansible_user=vagrant
+ansible_ssh_private_key_file=~/.vagrant.d/insecure_private_key

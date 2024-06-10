@@ -1,0 +1,8 @@
+---
+
+
+# Install and configure PostgreSQL on my db server
+- import_playbook: playbook_install_postgresql.yml
+
+# create database and user for Django Demo App and import data if necessary
+- import_playbook: playbook_create_django_db_objects.yml

@@ -1,0 +1,81 @@
+---
+# Play to create database and user for Django Demo App and import data if necessary.
+
+# To force restoring DB data from pg_dump file use extra var: should_import_data_dump=True.
+# Example: ansible-playbook -i inventories/vagrant_ubuntu20.04 playbook_create_django_db_objects.yml --extra-vars "should_import_data_dump=True"
+
+- name: Create database and user for Django Demo App. Import data if database created.
+  hosts: db
+  become: yes
+
+  vars:
+  #  should_import_data_dump: no
+
+  pre_tasks:
+    # tasks to load secret vars from either gitignored vars_secret.yml or encrypted vars_vault.yml
+    - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
+
+    - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
+
+    - name: install required pkgs for ansible postgresql modules
+      ansible.builtin.apt:
+        name:
+          - python3-psycopg2
+          - libpq-dev
+        state: present
+
+  handlers:
+    - name: restart postgresql
+      ansible.builtin.service: name=postgresql state=restarted
+
+  tasks:
+    - name: postgresql.service enabled and running
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: create a new database with name `{{ app_database_name }}` for our app
+      become_user: "{{ postgres_user }}"
+      community.postgresql.postgresql_db:
+        name: "{{ app_database_name }}"
+        template: template0  # copy “pristine” DB: https://www.postgresql.org/docs/current/manage-ag-templatedbs.html
+        encoding: UTF-8
+        state: present
+      register: app_db_created_result
+
+    - name: create new user with name `{{ app_database_user }}` for our app
+      become_user: "{{ postgres_user }}"
+      community.postgresql.postgresql_user:
+        name: "{{ app_database_user }}"
+        password: "{{ app_database_pass }}"
+        expires: infinity
+        state: present
+
+    - name: grant all privileges on database `{{ app_database_name }}` to user `{{ app_database_user }}`
+      become_user: "{{ postgres_user }}"
+      community.postgresql.postgresql_privs:
+        db: template1                     # db to connect to, not the one to grant privileges on
+        privs: ALL                        # grant all privileges
+        type: database                    # type of object
+        obj: "{{ app_database_name }}"    # name of db to grant privileges on
+        role: "{{ app_database_user }}"   # user which privs will be modified
+        grant_option: false               # Whether user may grant/revoke specified privileges to others
+        state: present                    # If present, privileges are granted. If absent, revoked
+
+    - name: Copy sql dump file with owner and permissions
+      ansible.builtin.copy:
+        src: "{{ local_sql_dump_file_path }}"  # e.g. files/tutorsite_dumpfile.sql
+        dest: "{{ remote_data_dump_dir }}/"    # must end in / for dir to be created if not exists
+        owner: "{{ postgres_user }}"
+        group: "{{ postgres_user }}"
+        mode: '0644'
+      when: app_db_created_result.changed or should_import_data_dump
+
+    - name: Restore database data from dump sql file
+      become_user: "{{ postgres_user }}"
+      community.postgresql.postgresql_db:
+        name: "{{ app_database_name }}"            # name of database to connect through which the recovery will take place
+        state: restore
+        target: "{{ remote_sql_dump_file_path }}"  # /home/{{ postgres_user }}/data_dumps/tutorsite_dumpfile.sql
+      when: app_db_created_result.changed or should_import_data_dump

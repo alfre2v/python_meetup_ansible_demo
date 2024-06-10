@@ -1,0 +1,20 @@
+---
+
+# To install both roles and collections at the same time with one command, run the following:
+#  $ ansible-galaxy install -r requirements.yml
+#
+# More info:
+#  https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#install-multiple-collections-with-a-requirements-file
+#  https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#installing-multiple-roles-from-multiple-files
+
+roles:
+  # Install roles from Ansible Galaxy.
+  - name: geerlingguy.certbot
+  - name: geerlingguy.git
+
+
+collections:
+  # Install collections from Ansible Galaxy
+  - name: community.postgresql
+    version: "*"
+    type: galaxy

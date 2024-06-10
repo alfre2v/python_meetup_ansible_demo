@@ -1,0 +1,7 @@
+---
+
+- name: update apt cache and apply latest updates
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 36000  # 3600 * 10 = 10 hours
+    upgrade: safe
