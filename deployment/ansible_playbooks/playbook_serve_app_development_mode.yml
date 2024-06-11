@@ -45,25 +45,7 @@
         groups: www-data,syslog
         append: yes
 
-#    - name: create {{ app_web_root_dir }} folder
-#      become: yes
-#      become_user: "{{ deployment_user }}"
-#      ansible.builtin.file:
-#        path: "{{ app_web_root_dir }}"  # /var/www/{{ unique_appname }}
-#        state: directory
-#      notify: topic restart nginx and gunicorn
-
-    - name: clone repo's branch to deploy on remote node
-      become: yes
-      become_user: "{{ deployment_user }}"
-      ansible.builtin.git:
-        repo: "{{ git_repo_https }}"
-        dest: "{{ remote_code_dir_path }}"
-        single_branch: yes
-        version: "{{ git_repo_branch }}"
-        force: true
-
-    - name: also clone repo's branch to control node to perform template substitution later
+    - name: clone repo's branch locally to perform template substitution later
       become: no
       ansible.builtin.git:
         repo: "{{ git_repo_https }}"
@@ -73,6 +55,24 @@
         force: true
       run_once: yes
       delegate_to: 127.0.0.1
+
+#    - name: clone repo's branch to deploy on remote node
+#      become: yes
+#      become_user: "{{ deployment_user }}"
+#      ansible.builtin.git:
+#        repo: "{{ git_repo_https }}"
+#        dest: "{{ remote_code_dir_path }}"
+#        single_branch: yes
+#        version: "{{ git_repo_branch }}"
+#        force: true
+
+    - name: Copy project folder using rsync (fast)
+      become: yes
+      become_user: "{{ deployment_user }}"
+      ansible.posix.synchronize:
+        mode: push
+        src: "{{ local_code_dir_path }}/"   # Must have trailing / . Content of local folder will be copied to newly created remote folder.
+        dest: "{{ remote_code_dir_path }}"
 
     - name: copy django local settings from template and perform substitutions
       become: yes
@@ -121,4 +121,21 @@
       # Solution: only run migrations in first server of app group. Alternatively use: `run_once: true`)
       when: inventory_hostname == groups['app'][0]
 
+    - name: Hack - create a quick shell script to execute our application in django development server (insecure!)
+      become: yes
+      become_user: "{{ deployment_user }}"
+      ansible.builtin.copy:
+        dest: "{{ remote_top_django_dir_path }}/start_app.sh"
+        content: |
+          #!/bin/bash
+          
+          # quick and dirty way to start our app as a service
+          nohup {{ remote_app_virtualenv_dir }}/bin/python3 manage.py runserver --insecure {{ django_development_listen }}:{{ django_development_port }} &
+          echo $! > {{ remote_top_django_dir_path }}/pid.nohup
+        mode: '0755'
 
+    - name: Serve our app via django development server
+      ansible.builtin.command:
+        cmd: "./start_app.sh"
+        chdir: "{{ remote_top_django_dir_path }}"
+      changed_when: False

@@ -68,6 +68,8 @@ app_local_settings_allowed_hosts: '{{ ''"'' + (([''.localhost'', ''127.0.0.1''] 
 
 django_debug_on: "True"  # or "False" to disable debug. This substitute DEBUG = False in Django local settings template.
 
+django_development_listen: 0.0.0.0
+django_development_port: 8080
 
 # --- App domains primary vars ---
 
@@ -87,7 +89,6 @@ app_domain_list_no_prefix: "{{ app_domain_list | map('split', ':') | map('last')
 # app_domain_list:
 #   - "DNS:demos2.orc-app1.test"
 #   - "DNS:demos2.orc-app2.test"
-
 
 
 
@@ -118,10 +119,6 @@ local_data_dump_dir: "files"                                                    
 remote_data_dump_dir: /home/{{ postgres_user }}/data_dumps                        # do not add / in the end
 local_sql_dump_file_path: "{{ local_data_dump_dir }}/{{ sql_dump_filename }}"
 remote_sql_dump_file_path: "{{ remote_data_dump_dir }}/{{ sql_dump_filename }}"
-
-
-
-
 
 
 
