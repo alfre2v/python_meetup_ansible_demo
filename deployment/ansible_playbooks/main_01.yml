@@ -6,3 +6,6 @@
 
 # create database and user for Django Demo App and import data if necessary
 - import_playbook: playbook_create_django_db_objects.yml
+
+# copy code to app server, prepare python env, and start a web server (in development mode)
+- import_playbook: playbook_serve_app_development_mode.yml

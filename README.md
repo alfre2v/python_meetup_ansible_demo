@@ -37,10 +37,17 @@ Run the local development web server: `$ python manage.py runserver`
 
 Then:
 
-- If you go to `http://127.0.0.1:8000/` you will get a 404 because no url pattern matches the root url.
+- If you go to `http://127.0.0.1:8000/` you will get a 404 because no url pattern matches the root url. This is a bit confusing, I know, but I'm following the official Django Tutorial steps.
 - To access the Polls app navigate to: `http://127.0.0.1:8000/polls/` . This app demonstrates using functional views, has limited tests but does customize the admin interface.
-- To access the Polls generic app navigate to: `http://127.0.0.1:8000/polls_gen/` . This app demonstrates using generic class views, has all the tests, but does not customize the admin interface.
 - To access the admin interface: `http://127.0.0.1:8000/admin/` . The admin interface has been customized for the polls app. Admin customizations include the admin question list view: `http://localhost:8000/admin/polls/question/` and also the question detail view: `http://localhost:8000/admin/polls/question/2/change/`.
+
+
+### Access the Django app deployed in Vagrant
+
+- If you go to `http://orc-app1.test:8080/` you will get a 404 because no url pattern matches the root url. This is a bit confusing, I know, but I'm following the official Django Tutorial steps.
+- To access the Polls app navigate to: `http://orc-app1.test:8080/polls/` . This app demonstrates using functional views, has limited tests but does customize the admin interface.
+- To access the admin interface: `http://orc-app1.test:8080/admin/` . To log in use the credentials provided in the next section (they come from the original sql data dump file I included in the deployment scripts).
+
 
 ### Admin user
 
