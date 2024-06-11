@@ -67,24 +67,35 @@
 #        version: "{{ git_repo_branch }}"
 #        force: true
 
-    - name: read deployment version (helps to achieve idempotency)
+    - name: read deployment version local
+      become: no
+      ansible.builtin.shell:
+        cmd: >
+          cat {{ deployment_version_file_path_local }} | sed -n -r -e 's/(^[0-9]+$)/\1/p'
+      register: deploy_version_local
+      run_once: true
+      delegate_to: 127.0.0.1
+      changed_when: False
+    - debug:
+        var: deploy_version_local
+
+    - ansible.builtin.stat:
+        path: "{{ deployment_version_file_path_remote }}"
+      register: _version_file_remote
+    - debug:
+        var: _version_file_remote
+
+    - name: read deployment version remote
       become: yes
       become_user: "{{ deployment_user }}"
       ansible.builtin.shell:
         cmd: >
-          cat {{ deployment_version_file_path }} | sed -n -r -e 's/(^[0-9]+$)/\1/p'
-      register: deploy_version_result
-      run_once: true
-      delegate_to: "{{ item }}"
+          cat {{ deployment_version_file_path_remote }} | sed -n -r -e 's/(^[0-9]+$)/\1/p'
+      register: deploy_version_remote
+      when: _version_file_remote.stat.exists
       changed_when: False
-      with_items: "{{ delegated_host }}"
-      vars:
-        delegated_host:
-          - 127.0.0.1
-          - "{{ ansible_host }}"
-
     - debug:
-        var: deploy_version_result
+        var: deploy_version_remote
 
     - name: Copy project folder using rsync (fast)
       become: yes
@@ -93,6 +104,7 @@
         mode: push
         src: "{{ local_code_dir_path }}/"   # Must have trailing / . Content of local folder will be copied to newly created remote folder.
         dest: "{{ remote_code_dir_path }}"
+      when: not _version_file_remote.stat.exists or (deploy_version_local.stdout | int > deploy_version_remote.stdout | int)
 
     - name: copy django local settings from template and perform substitutions
       become: yes
@@ -149,13 +161,28 @@
         content: |
           #!/bin/bash
           
-          # quick and dirty way to start our app as a service
-          nohup {{ remote_app_virtualenv_dir }}/bin/python3 manage.py runserver --insecure {{ django_development_listen }}:{{ django_development_port }} &
-          echo $! > {{ remote_top_django_dir_path }}/pid.nohup
+          # quick and dirty way to start our app as a service. Not suitable for production!
+          pid=$(cat {{ remote_top_django_dir_path }}/pid.nohup)
+          ps_grep=""
+          if [ -n "$pid" ]; then 
+            ps_grep=$(ps -aux | egrep "\s$pid\s")
+          fi
+          if [ -z "$ps_grep" ]; then
+            nohup {{ remote_app_virtualenv_dir }}/bin/python3 manage.py runserver --insecure {{ django_development_listen }}:{{ django_development_port }} &
+            echo $! > {{ remote_top_django_dir_path }}/pid.nohup
+            echo "App started"
+          fi
         mode: '0755'
+
+    - name: stop the app if running only when code has changed
+      ansible.builtin.shell:
+        cmd: kill `cat {{ remote_top_django_dir_path }}/pid.nohup`
+      when: not _version_file_remote.stat.exists or (deploy_version_local.stdout | int > deploy_version_remote.stdout | int)
+      failed_when: False
 
     - name: Serve our app via django development server
       ansible.builtin.command:
         cmd: "./start_app.sh"
         chdir: "{{ remote_top_django_dir_path }}"
-      changed_when: False
+      register: _start_app
+      changed_when: "'App started' in _start_app.stdout"

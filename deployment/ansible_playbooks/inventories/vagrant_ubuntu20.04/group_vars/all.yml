@@ -60,8 +60,8 @@ app_local_settings_template_filename: local_settings_{{ app_deploy_target }}.py.
 app_local_settings_module: "{{ app_local_settings_filename | split('.') | first }}"  # local_settings_env.py  =>  local_settings_env
 
 deployment_version_file: deployment_version
-deployment_version_file_path: "{{ local_top_django_dir_path }}/{{ deployment_version_file }}"
-
+deployment_version_file_path_local: "{{ local_top_django_dir_path }}/{{ deployment_version_file }}"
+deployment_version_file_path_remote: "{{ remote_top_django_dir_path }}/{{ deployment_version_file }}"
 
 # secret key to provide cryptographic signing for your django app. Should be unique and unpredictable.
 app_local_settings_secret_key: ""  # overridden in var_secrets.yml
