@@ -7,12 +7,17 @@
     Apply django migrations (and collectstatic?)
 
   hosts: app
-
   become: yes
 
   pre_tasks:
     - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
     - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
+
+    - name: 'install apt packages that must be installed in all machines (declared in var: apt_install_packages)'
+      ansible.builtin.apt:
+        name: "{{ apt_install_packages }}"
+        state: present
+      when: (apt_install_packages is defined) and (apt_install_packages | length > 0)
 
     - name: install rsync needed for ansible.posix.synchronize module
       ansible.builtin.apt:
@@ -48,7 +53,7 @@
 #        state: directory
 #      notify: topic restart nginx and gunicorn
 
-    - name: Clone repo's branch to deploy on target node
+    - name: clone repo's branch to deploy on remote node
       become: yes
       become_user: "{{ deployment_user }}"
       ansible.builtin.git:
@@ -56,18 +61,35 @@
         dest: "{{ remote_code_dir_path }}"
         single_branch: yes
         version: "{{ git_repo_branch }}"
+        force: true
 
-    - name: Also Clone repo's branch to deploy on control node to perform template substitution later
+    - name: also clone repo's branch to control node to perform template substitution later
       become: no
-      hosts: localhost
-      connection: local
-#      run_once: yes
-#      delegate_to: 127.0.0.1
       ansible.builtin.git:
         repo: "{{ git_repo_https }}"
         dest: "{{ local_code_dir_path }}"
         single_branch: yes
         version: "{{ git_repo_branch }}"
+        force: true
+      run_once: yes
+      delegate_to: 127.0.0.1
+
+    - name: copy django local settings from template and perform substitutions
+      become: yes
+      become_user: "{{ deployment_user }}"
+      ansible.builtin.template:
+        src: "{{ local_app_code_settings_dir }}/{{ app_local_settings_template_filename }}"
+        dest: "{{ remote_app_code_settings_dir }}/{{ app_local_settings_filename }}"
+        force: true
+
+    - name: modify remote settings.py to import local_settings_{{app_deploy_target}}.py
+      become: yes
+      become_user: "{{ deployment_user }}"
+      ansible.builtin.replace:
+        # change `from .local_settings import *` into `from .local_settings_vagrant import *`
+        path: "{{ remote_app_code_settings_dir }}/settings.py"
+        regexp: '^(?P<from>\s*from)\s+(?P<module>\.local_settings)\s+(?P<import_star>import\s+\*)(?P<comment>\s*#[^\n]*)?$'
+        replace: '\g<from> .{{ app_local_settings_module }} \g<import_star>  # ansible: modified for deployment'
 
     - name: create virtualenv and install requirements in remote host
       become: yes
@@ -99,15 +121,4 @@
       # Solution: only run migrations in first server of app group. Alternatively use: `run_once: true`)
       when: inventory_hostname == groups['app'][0]
 
-    - name: copy django local settings from template and perform substitutions
-      ansible.builtin.template:
-        src: "{{ local_app_code_settings_dir }}/{{ app_local_settings_template_filename }}"
-        dest: "{{ remote_app_code_settings_dir }}/{{ app_local_settings_filename }}"
-        force: true
 
-    - name: modify remote settings.py to import local_settings_{{app_deploy_target}}.py
-      ansible.builtin.replace:
-        # change `from .local_settings import *` into `from .local_settings_vagrant import *`
-        path: "{{ remote_app_code_settings_dir }}/settings.py"
-        regexp: '^(?P<from>\s*from)\s+(?P<module>\.local_settings)\s+(?P<import_star>import\s+\*)(?P<comment>\s*#[^\n]*)?$'
-        replace: '\g<from> .{{ app_local_settings_module }} \g<import_star>  # ansible: modified for deployment'
