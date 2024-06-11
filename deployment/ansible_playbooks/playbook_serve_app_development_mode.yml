@@ -9,6 +9,9 @@
   hosts: app
   become: yes
 
+  vars:
+    print_debug: no
+
   pre_tasks:
     - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
     - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
@@ -76,14 +79,18 @@
       run_once: true
       delegate_to: 127.0.0.1
       changed_when: False
+
     - debug:
         var: deploy_version_local
+      when: "{{ print_debug }}"
 
     - ansible.builtin.stat:
         path: "{{ deployment_version_file_path_remote }}"
       register: _version_file_remote
+
     - debug:
         var: _version_file_remote
+      when: "{{ print_debug }}"
 
     - name: read deployment version remote
       become: yes
@@ -94,8 +101,10 @@
       register: deploy_version_remote
       when: _version_file_remote.stat.exists
       changed_when: False
+
     - debug:
         var: deploy_version_remote
+      when: "{{ print_debug }}"
 
     - name: Copy project folder using rsync (fast)
       become: yes
