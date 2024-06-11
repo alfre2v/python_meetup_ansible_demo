@@ -1,0 +1,26 @@
+
+SECRET_KEY = "{{ app_local_settings_secret_key }}"
+
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = {{ django_debug_on }}
+
+
+# .test is the local domain for all our vagrant networks. See  ../../deployment/vagrant_ubuntu20.04/Vagrantfile
+ALLOWED_HOSTS = [{{ app_local_settings_allowed_hosts }}]  # at a minimum contains: [".localhost", "127.0.0.1", ]
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": "{{ app_database_host }}",  # "192.168.56.6",  # ansible first db host in inventory
+        "PORT": "{{ app_database_port }}",  # "5432"
+        "NAME": "{{ app_database_user }}",
+        "USER": '{{ app_database_name }}',
+        "PASSWORD": "{{ app_database_pass }}",  # ansible provided from either var_secrets.yml or var_vaults.yml
+        "CONN_MAX_AGE": 0,
+    }
+}
+
+
+# STATIC_ROOT = '/var/www/{project_name_or_domain_etc}/static'

@@ -31,7 +31,6 @@
           - build-essential
         state: present
 
-
   tasks:
     - name: add deployment user belonging to groups www-data, syslog
       # usermod -a -G www-data user1
@@ -49,7 +48,7 @@
 #        state: directory
 #      notify: topic restart nginx and gunicorn
 
-    - name: Clone repo's branch to deploy
+    - name: Clone repo's branch to deploy on target node
       become: yes
       become_user: "{{ deployment_user }}"
       ansible.builtin.git:
@@ -58,7 +57,17 @@
         single_branch: yes
         version: "{{ git_repo_branch }}"
 
-
+    - name: Also Clone repo's branch to deploy on control node to perform template substitution later
+      become: no
+      hosts: localhost
+      connection: local
+#      run_once: yes
+#      delegate_to: 127.0.0.1
+      ansible.builtin.git:
+        repo: "{{ git_repo_https }}"
+        dest: "{{ local_code_dir_path }}"
+        single_branch: yes
+        version: "{{ git_repo_branch }}"
 
     - name: create virtualenv and install requirements in remote host
       become: yes
@@ -69,7 +78,6 @@
         virtualenv_site_packages: no
         state: present
 
-
     - name: run python manage.py makemigrations
       become: yes
       become_user: "{{ deployment_user }}"
@@ -78,7 +86,6 @@
         chdir: "{{ remote_top_django_dir_path }}"  # /home/{{ deployment_user }}/{{ app_dir_name_remote }}/
       register: makemigrations
       changed_when: "'No changes detected' not in makemigrations.stdout"
-
 
     - name: run python manage.py migrate
       become: yes
@@ -92,4 +99,15 @@
       # Solution: only run migrations in first server of app group. Alternatively use: `run_once: true`)
       when: inventory_hostname == groups['app'][0]
 
+    - name: copy django local settings from template and perform substitutions
+      ansible.builtin.template:
+        src: "{{ local_app_code_settings_dir }}/{{ app_local_settings_template_filename }}"
+        dest: "{{ remote_app_code_settings_dir }}/{{ app_local_settings_filename }}"
+        force: true
 
+    - name: modify remote settings.py to import local_settings_{{app_deploy_target}}.py
+      ansible.builtin.replace:
+        # change `from .local_settings import *` into `from .local_settings_vagrant import *`
+        path: "{{ remote_app_code_settings_dir }}/settings.py"
+        regexp: '^(?P<from>\s*from)\s+(?P<module>\.local_settings)\s+(?P<import_star>import\s+\*)(?P<comment>\s*#[^\n]*)?$'
+        replace: '\g<from> .{{ app_local_settings_module }} \g<import_star>  # ansible: modified for deployment'

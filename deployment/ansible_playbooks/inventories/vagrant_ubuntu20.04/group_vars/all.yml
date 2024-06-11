@@ -46,8 +46,47 @@ remote_app_code_settings_dir: "{{ remote_top_django_dir_path }}/{{ app_django_ma
 # app virtualenv location
 remote_app_virtualenv_dir: "{{ remote_code_dir_path }}/.venv"
 
+# dir to clone repo in Ansible host
+local_code_dir_path: "/tmp/{{ app_dir_name_remote }}"
+local_top_django_dir_path:  "{{ local_code_dir_path }}/{{ top_django_dir }}"
+local_app_code_settings_dir: "{{ local_top_django_dir_path }}/{{ app_django_mainapp }}"
+
+# target deployment environment with a unique local_settings template. possible values are 'vagrant' or 'prod'
+app_deploy_target: vagrant
+
+app_local_settings_filename: local_settings_{{ app_deploy_target }}.py
+app_local_settings_template_filename: local_settings_{{ app_deploy_target }}.py.template
+
+app_local_settings_module: "{{ app_local_settings_filename | split('.') | first }}"  # local_settings_env.py  =>  local_settings_env
 
 
+
+# secret key to provide cryptographic signing for your django app. Should be unique and unpredictable.
+app_local_settings_secret_key: ""  # overridden in var_secrets.yml
+
+app_local_settings_allowed_hosts: '{{ ''"'' + (([''.localhost'', ''127.0.0.1''] + app_domain_list_no_prefix) | join(''", "'')) + ''"'' }}'  # minimum string: '".localhost", "127.0.0.1"'
+
+django_debug_on: "True"  # or "False" to disable debug. This substitute DEBUG = False in Django local settings template.
+
+
+# --- App domains primary vars ---
+
+# List of domains nginx will recognize for this app.
+# prefix each entry with with one of: email, URI, DNS, RID, IP, dirName, otherName
+app_domain_list:
+  - "DNS:orc-app1.test"
+  - "DNS:www.orc-app1.test"
+  - "DNS:docs.orc-app1.test"
+
+# list of app domain names without the SAN prefix (this is usually what you want)
+app_domain_list_no_prefix: "{{ app_domain_list | map('split', ':') | map('last') | map('trim') }}"
+
+
+# for an independent deployment to another subdomain in same machine already deployed you must
+# change vars: `unique_appname`, `gunicorn_listen_port`, `app_domain_list` and `urls_available_check`.
+# app_domain_list:
+#   - "DNS:demos2.orc-app1.test"
+#   - "DNS:demos2.orc-app2.test"
 
 
 
