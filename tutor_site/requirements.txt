@@ -1,6 +1,6 @@
-Django>=5.0.6
+Django>=4.2.3
 pytz>=2024.1
-gunicorn>=22.0.0
+gunicorn>=21.2.0
 
 # Psycopg - Binary installation: psycopg[binary]
 # psycopg3 installation: https://www.psycopg.org/psycopg3/docs/basic/install.html

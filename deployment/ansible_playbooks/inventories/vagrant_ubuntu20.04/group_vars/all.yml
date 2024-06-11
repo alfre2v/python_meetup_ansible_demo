@@ -10,13 +10,46 @@ postgres_admin_pass: ""  # overridden in var_secrets.yml or vars_vault.yml
 postgres_user: "{{ postgres_admin_user }}"
 #postgres_pass: ""  # overridden by var_secrets.yml
 
-
 app_database_host: "{{ hostvars[groups['db'][0]].ansible_host }}"  # to be substituted in local_settings_vagrant_template.py
 app_database_port: 5432
 
 app_database_name: "tutor_site_demo"
 app_database_user: "{{ app_database_name }}"
 app_database_pass: ""  # overridden by var_secrets.yml
+
+
+# code will be cloned to /home/{{ deployment_user }}/{{ app_dir_name_remote }}
+git_repo_ssh: "git@github.com:alfre2v/python_meetup_ansible_demo.git"
+git_repo_https: "https://github.com/alfre2v/python_meetup_ansible_demo.git"
+git_repo_branch: main
+
+
+# linux user who will deploy the app code.
+deployment_user: tutorsite
+
+# unique_appname must be unique in a server. Same app can be deployed in 2 different subdomains/vhosts in same server
+unique_appname: tutor_site_demo1
+
+# Remote folder name into which the app code will be cloned. For full paths see `remote_app_code_dir`
+app_dir_name_remote: "{{ unique_appname }}"
+
+# name of the top django folder (which contains manage.py), and the folder that contains django's `settings.py`.
+top_django_dir: tutor_site
+# name of folder that contains django's `settings.py`.
+app_django_mainapp: tutor_site  # an alias for app_main_djangoapp_dir_name
+
+# app source code locations
+remote_code_dir_path: "/home/{{ deployment_user }}/{{ app_dir_name_remote }}"
+remote_top_django_dir_path:  "{{ remote_code_dir_path }}/{{ top_django_dir }}"
+remote_app_code_settings_dir: "{{ remote_top_django_dir_path }}/{{ app_django_mainapp }}"
+
+# app virtualenv location
+remote_app_virtualenv_dir: "{{ remote_code_dir_path }}/.venv"
+
+
+
+
+
 
 
 # --- Postgresql configuration lines ---

@@ -2,6 +2,11 @@
 
 Demo code for "An Evening of Python Coding" event hosted by the Austin Python Meetup group on Jun 18, 2024.
 
+Link to the presentation [here]().
+
+The topic of this presentation is to demonstrate the use of [Ansible](https://docs.ansible.com/ansible/latest/index.html) 
+to automate the deployment of distributed applications.
+
 This demo code consist of two parts each contained in a folder:
 
 1. `tutor_site`: Contains a simple Django Application resulting of following the Django tutorial.
@@ -9,7 +14,7 @@ This demo code consist of two parts each contained in a folder:
 
 --------------------------------------------------------------------
 
-## The application tutor_site
+## The application to be deployed - tutor_site
 
 This is a demo Django application created from following Django official tutorial.
 
@@ -26,9 +31,9 @@ Links to the tutorial sections we followed:
 - Part 7: Customizing the admin site [https://docs.djangoproject.com/en/5.0/intro/tutorial07/](https://docs.djangoproject.com/en/5.0/intro/tutorial07/)
 - Part 8: Adding third-party packages [https://docs.djangoproject.com/en/5.0/intro/tutorial08/](https://docs.djangoproject.com/en/5.0/intro/tutorial08/)
 
-### Running the app in local development mode (never use this in production)
+### Running the app in local development mode (never use this in production):
 
-Run the local server: `$ python manage.py runserver`
+Run the local development web server: `$ python manage.py runserver`
 
 Then:
 
@@ -39,7 +44,9 @@ Then:
 
 ### Admin user
 
-For the admin interface I created an admin user:
+Part of this demo app customizes a view in Django's [admin interface](https://docs.djangoproject.com/en/5.0/ref/contrib/admin/).
+
+In order to access the admin interface you need to create a user with administration rights:
 
 ```text
 $ python manage.py createsuperuser
@@ -48,6 +55,12 @@ user: admin
 email: admin@tutorsiteapp.net
 pass: Gr3enM0nkeyL4tte%_
 ```
+
+**Never commit your credentials to Github!**!!!
+The password above is needed for us to demonstrate accessing the admin interface on our virtualized vagrant app server during the demo.
+The app server will only be accessible from localhost. 
+Please, change this password if you want to run this demo in your own machine.
+
 
 --------------------------------------------------------------------
 
