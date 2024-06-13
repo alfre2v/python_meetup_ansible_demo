@@ -80,7 +80,6 @@ django_development_port: 8080
 app_domain_list:
   - "DNS:orc-app1.test"
   - "DNS:www.orc-app1.test"
-  - "DNS:docs.orc-app1.test"
 
 # list of app domain names without the SAN prefix (this is usually what you want)
 app_domain_list_no_prefix: "{{ app_domain_list | map('split', ':') | map('last') | map('trim') }}"
@@ -92,6 +91,12 @@ app_domain_list_no_prefix: "{{ app_domain_list | map('split', ':') | map('last')
 #   - "DNS:demos2.orc-app1.test"
 #   - "DNS:demos2.orc-app2.test"
 
+# list of urls to check in our app after deployment completes.
+# it checks for the presence of a substring in the body of the response.
+urls_available_check:
+  - { domain: orc-app1.test,  proto: 'http', port: "{{ django_development_port }}", path: '/polls/', body_substr: 'Open polls' }
+
+use_letsencrypt: no
 
 
 # --- Postgresql configuration lines ---
