@@ -1,5 +1,14 @@
-li a {
+.content a {
     color: green;
+    text-decoration: none;
+}
+
+.content h1,h2,h3 {
+    color: SteelBlue;
+}
+
+.content {
+    color: DarkSlateGrey;
 }
 
 body {
