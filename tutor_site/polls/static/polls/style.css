@@ -27,6 +27,11 @@ body {
     text-decoration: underline;
 }
 
+#sidebar li span {
+    display: inline-block;
+    width: 15px;
+}
+
 .column {
     float: left;
 }

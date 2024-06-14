@@ -10,11 +10,11 @@
     <div class="container">
         <div id="sidebar" class="column left">
             <div><p>Pages</p></div>
-            {% block sidebar %}
             <ul>
+            {% block sidebar %}
                 <li><a href="/polls/">Questions</a></li>
-            </ul>
             {% endblock %}
+            </ul>
         </div>
 
         <div id="content" class="column right">
