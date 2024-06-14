@@ -1,10 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Question Detail</title>
-</head>
-<body>
+{% extends "polls/base.html" %}
+
+{% block title %}Question Detail{% endblock %}
+
+{% block sidebar %}
+    <ul>
+        <li><a href="/polls/">Questions</a></li>
+        {% if show_question_info %}
+        <li class="current"><a href="/polls/{{ question.id }}/">Details Question {{ question.id }}</a></li>
+        {% else %}
+        <li class="current"><a href="/polls/{{ question.id }}/vote">Vote in Question {{ question.id }}</a></li>
+        {% endif %}
+    </ul>
+{% endblock %}
+
+{% block content %}
     {% if show_question_info %}
         <h1>Question: {{ question.question_text }}</h1>
         <h3>Available Choices:</h3>
@@ -28,6 +37,4 @@
         </fieldset>
         <input type="submit" value="Vote">
     </form>
-
-</body>
-</html>
+{% endblock %}

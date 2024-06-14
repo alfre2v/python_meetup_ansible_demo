@@ -1,17 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Results</title>
-</head>
-<body>
+{% extends "polls/base.html" %}
+
+{% block title %}Polls Results{% endblock %}
+
+{% block sidebar %}
+    <ul>
+        <li><a href="/polls/">Questions</a></li>
+        <li class="current"><a href="/polls/{{ question.id }}/results/">Vote Count Question {{ question.id }}</a></li>
+    </ul>
+{% endblock %}
+
+{% block content %}
     <h1>Results for {{ question.question_text }}</h1>
     <ul>
         {% for choice in question.choice_set.all %}
             <li>{{ choice.choice_text }} - {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
         {% endfor %}
     </ul>
-
     <a href="{% url 'polls:vote' question.id %}">Vote again?</a>
-</body>
-</html>
+{% endblock %}
