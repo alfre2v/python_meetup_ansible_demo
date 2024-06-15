@@ -84,21 +84,6 @@ app_domain_list:
 # list of app domain names without the SAN prefix (this is usually what you want)
 app_domain_list_no_prefix: "{{ app_domain_list | map('split', ':') | map('last') | map('trim') }}"
 
-
-# for an independent deployment to another subdomain in same machine already deployed you must
-# change vars: `unique_appname`, `gunicorn_listen_port`, `app_domain_list` and `urls_available_check`.
-# app_domain_list:
-#   - "DNS:demos2.orc-app1.test"
-#   - "DNS:demos2.orc-app2.test"
-
-# list of urls to check in our app after deployment completes.
-# it checks for the presence of a substring in the body of the response.
-urls_available_check:
-  - { domain: orc-app1.test,  proto: 'http', port: "{{ django_development_port }}", path: '/polls/', body_substr: 'Open polls' }
-
-use_letsencrypt: no
-
-
 # --- Postgresql configuration lines ---
 
 # lines to substitute in file /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
@@ -128,6 +113,7 @@ local_sql_dump_file_path: "{{ local_data_dump_dir }}/{{ sql_dump_filename }}"
 remote_sql_dump_file_path: "{{ remote_data_dump_dir }}/{{ sql_dump_filename }}"
 
 
+# --- APT packages ---
 
 # apt packages that must be installed in all machines
 apt_install_packages:

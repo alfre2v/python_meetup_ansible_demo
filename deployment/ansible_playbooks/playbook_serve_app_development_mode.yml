@@ -13,7 +13,9 @@
     print_debug: no
 
   pre_tasks:
-    - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
+    - ansible.builtin.include_vars:
+        dir: vars
+
     - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
 
     - name: 'install apt packages that must be installed in all machines (declared in var: apt_install_packages)'
@@ -199,23 +201,3 @@
       changed_when: "'App started' in _start_app.stdout"
       tags:
         - start_app
-
-  post_tasks:
-    # final check: wait fot app to be reachable in a url and use defer_to to run task in ansible deployment host (local)
-    - name: Pause play until a URL is reachable from ansible host
-      become: no
-      ansible.builtin.uri:
-        url: "{{ item.proto }}://{{ item.domain }}:{{ item.port }}/{{ (item.path.startswith('/') and item.path[1:]) or item.path }}"
-        # follow_redirects: none
-        method: GET
-        validate_certs: "{{ True if use_letsencrypt else False }}"
-        return_content: true
-      register: _result
-      until: "item.body_substr in _result.content"
-      retries: 5 # 5 * 6 seconds = 1/2 minute
-      delay: 6 # Every 6 seconds
-      run_once: True
-      delegate_to: 127.0.0.1
-      with_items: "{{ urls_available_check }}"
-      tags:
-        - url_check

@@ -12,8 +12,9 @@
       ansible.builtin.service: name=postgresql state=restarted
 
   pre_tasks:
-    # load secret vars from either gitignored vars_secret.yml or encrypted vars_vault.yml
-    - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
+    - name: include encrypted vars (e.g. var/var_vault.yml)
+      ansible.builtin.include_vars:
+        dir: vars
 
     - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
 

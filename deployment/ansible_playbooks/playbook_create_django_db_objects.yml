@@ -12,8 +12,8 @@
   #  should_import_data_dump: no
 
   pre_tasks:
-    # tasks to load secret vars from either gitignored vars_secret.yml or encrypted vars_vault.yml
-    - ansible.builtin.import_tasks: tasks/tasks_conditional_include_secret_vars.yml
+    - ansible.builtin.include_vars:
+        dir: vars
 
     - ansible.builtin.import_tasks: tasks/tasks_apt_upgrade.yml
 
