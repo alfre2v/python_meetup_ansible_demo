@@ -2,7 +2,12 @@
 
 Demo code for "An Evening of Python Coding" event hosted by the Austin Python Meetup group on Jun 18, 2024.
 
-Link to the presentation [here]().
+Here is a link to a page containing references to [all Evening of Python Coding Event meetups](https://github.com/Jacob-Barhak/EveningOfPythonCoding) that were held in Austin TX.
+The Video of the Ansible talk delivered of Jun 18 appears as: [Jun 2024 Austin / DC - Ansible + Video by Alfredo Valles](https://youtu.be/rGX0tE8nECI)
+
+The presentation slides I wrote for this talk can be found [here](https://docs.google.com/presentation/d/e/2PACX-1vRo5nIENaUMZgzbIkzMYQXMK3tnMcZe7jRhVJRKy_q9cgUod7rKaex9FBi0zCPaoio9DEW4KO2Pl7iq/pub?start=false&loop=false&delayms=3000).
+Please notice that this presentation, as well as the accompanying code, do come with some restrictions, you must obey the limits imposed by the GPL-3 License. 
+You can find the text of this license in the *LICENSE* file.
 
 The topic of this presentation is to demonstrate the use of [Ansible](https://docs.ansible.com/ansible/latest/index.html) 
 to automate the deployment of distributed applications.
